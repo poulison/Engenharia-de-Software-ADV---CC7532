@@ -1,4 +1,4 @@
-# Engenharia-de-Software-ADV---CC7532
+# Projeto do Semestre: Plus Health
 
 ## Integrantes
 
@@ -8,4 +8,4 @@
 - Victor Pimentel Lario
 - Rafael Iamashita Becsei
 
-## 
+## Descrição do Projeto:
