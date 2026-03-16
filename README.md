@@ -15,47 +15,105 @@ Para ler mais detalhes sobre o projeto acesse o documento: [Definição do proje
 
 ## Descrição dos Dois Componentes Implementados
 
-**UsuarioComponent** — gerencia o ciclo de vida de usuários: cadastro com validação (e-mail duplicado, campos obrigatórios), busca por ID e listagem. Localizado em components/usuario/.
+**UsuarioComponent** — Responsável por cadastrar, autenticar e gerenciar os dados dos usuários. Persiste as informações no banco de dados PostgreSQL via SQLAlchemy.
+Operações que oferece:
+-	cadastrar() — cria um novo usuário no banco após verificar e-mail duplicado
+-	login() — autentica o usuário por e-mail e senha
+-	buscar() — retorna um usuário pelo ID
+-	listar() — retorna todos os usuários
+-	atualizar_fisico() — atualiza o peso e a altura do usuário
 
-**CalculosComponent** — executa os cálculos corporais de saúde do usuário. Calcula o IMC (com classificação da OMS) e a TMB (Taxa Metabólica Basal pela fórmula Mifflin-St Jeor). Localizado em components/calculos/. Este 
-componente depende do UsuarioComponent para buscar os dados físicos do usuário, mas nunca o instancia diretamente.
+
+**CalculosComponent** — Responsável pelos cálculos de saúde corporal. Para funcionar, precisa dos dados físicos do usuário (peso, altura, idade), que são fornecidos pelo UsuarioComponent via interface.
+Operações que oferece:
+-	calcular_imc() — calcula o IMC (peso ÷ altura²) e retorna a classificação da OMS
+-	calcular_tmb() — calcula a Taxa Metabólica Basal pela fórmula Mifflin-St Jeor
+
+
 
 ### Interfaces Fornecidas
 
 <<interface>> UsuarioService
-  + cadastrar_usuario(dados: UsuarioCriar) → Usuario
-  + buscar_usuario(usuario_id: int)        → Optional[Usuario]
-  + listar_usuarios()                      → list[Usuario]
+
+    class UsuarioService(ABC):
+        def cadastrar(dados: UsuarioCriar)     -> UsuarioOut
+        def login(dados: UsuarioLogin)         -> UsuarioOut
+        def buscar(usuario_id: int)            -> Optional[UsuarioOut]
+        def listar()                           -> list[UsuarioOut]
+        def atualizar_fisico(id, dados)        -> UsuarioOut
+
+
 
 <<interface>> CalculosService
-  + calcular_imc(usuario_id: int)  → ResultadoIMC
-  + calcular_tmb(usuario_id: int)  → ResultadoTMB
-Ambas definidas com abc.ABC + @abstractmethod em Python — equivalente direto ao interface do Java/UML.
+
+    class CalculosService(ABC):
+        def calcular_imc(usuario_id: int)        -> ResultadoIMC
+        def calcular_tmb(usuario_id: int)        -> ResultadoTMB
+
 
 ### Interface Requerida
 
-CalculosComponent requer UsuarioService — ele precisa dos dados físicos (peso, altura, idade) do usuário para calcular IMC e TMB. Essa dependência é declarada apenas pelo tipo da interface, nunca pela classe concreta.
+Interface requerida é uma dependência que um componente precisa de outro para funcionar.
+-	UsuarioComponent — não requer nenhuma interface externa, é independente
+-	CalculosComponent — requer UsuarioService para buscar o peso, altura e idade do usuário antes de calcular
+
+A dependência é declarada apenas pelo tipo da interface no construtor:
+
+      class CalculosComponent(CalculosService):
+          def __init__(self, usuario_service: UsuarioService):
+          self._usuario_service = usuario_service
+
 
 ### Como Ocorre a Comunicação
 
-O dependencies.py cria os componentes e injeta UsuarioComponent dentro de CalculosComponent como UsuarioService (a interface)
-Quando alguém chama calcular_imc(1), o CalculosComponent chama self._usuario_service.buscar_usuario(1) internamente
-Essa chamada é resolvida pelo UsuarioComponent sem que CalculosComponent saiba qual classe está do outro lado
+A comunicação é indireta: CalculosComponent chama métodos de UsuarioService sem saber qual classe está implementando essa interface. O arquivo dependencies.py é responsável por conectar os dois.
+
+Exemplo do fluxo ao calcular o IMC:
+-	1. Frontend chama GET /calculos/imc/1
+-	2. FastAPI cria UsuarioComponent e o injeta dentro de CalculosComponent via dependencies.py
+-	3. CalculosComponent chama self._usuario_service.buscar(1)
+-	4. UsuarioComponent consulta o banco e retorna os dados do usuário
+-	5. CalculosComponent usa peso e altura para calcular e retorna o resultado
+-	6. Frontend exibe o IMC na tela de Perfil
+
+Trecho do container de injeção de dependência:
+
+    # dependencies.py
+    def get_calculos_service(
+        usuario_svc = Depends(get_usuario_service)
+    ) -> CalculosService:
+        return CalculosComponent(usuario_service=usuario_svc)
 
 
-### Como Foi Evitado o Acoplamento Direto
-Três mecanismos combinados: interfaces abstratas (nenhum componente importa a classe concreta do outro), injeção de dependência no construtor (o CalculosComponent recebe UsuarioService, não UsuarioComponent), e um container centralizado (dependencies.py) que faz o wiring. Trocar a implementação de qualquer componente não exige nenhuma alteração no outro.
+### Justificativa — Como Foi Evitado o Acoplamento Direto
+Três mecanismos foram combinados para evitar que os componentes dependessem diretamente um do outro:
+
+- 1. Interfaces abstratas (ABC)
+Cada componente expõe apenas uma interface como contrato. A classe concreta fica encapsulada dentro da sua própria pasta e nenhum outro módulo a importa diretamente.
+
+- 2. Injeção de dependência pelo construtor
+CalculosComponent recebe UsuarioService no seu construtor. Ele nunca importa UsuarioComponent e nunca instancia nada internamente. Apenas usa a interface que recebeu.
+
+- 3. Container centralizado (dependencies.py)
+É o único arquivo do sistema que conhece as classes concretas e faz a ligação entre elas. Se fosse necessário trocar a implementação de UsuarioComponent, bastaria alterar apenas este arquivo — CalculosComponent não precisaria de nenhuma mudança.
+
 
 ### Instruções de Execução
+Pré-requisito: ter o Docker e o Docker Compose instalados.
 
-1 - Sem instalar nada (demo puro):
+1 - Clone o repositório no GitHub
 
-2 - bashpython demo.py
+2 - Copie o arquivo de ambiente
+> cp .env.example .env
 
-3 - Com API REST (FastAPI):
+3 - Suba os containers:
+> docker compose up --build
 
-4 - bashpip install -r requirements.txt
+4 - Aguarde o build (primeira vez leva alguns minutos por causa do npm install)
 
-5 - uvicorn main:app --reload
+5 - Acesse no navegador:
+> Frontend: http://localhost:5173
+> Documentação da API: http://localhost:8000/docs
 
-**Acesse: http://localhost:8000/docs**
+
+O banco de dados é criado automaticamente no primeiro boot. Não é necessário rodar nenhum script SQL.
