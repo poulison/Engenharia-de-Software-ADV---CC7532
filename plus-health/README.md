@@ -1,4 +1,4 @@
-# ⊕ Plus Health — Lab 4
+# Plus Health 
 
 > Implementação de dois componentes com interfaces e injeção de dependência | FEI
 
