@@ -4,6 +4,7 @@ import Navbar   from './components/Navbar'
 import Login    from './pages/Login'
 import Cadastro from './pages/Cadastro'
 import Perfil   from './pages/Perfil'
+import Nutricao from './pages/Nutricao'
 
 function PrivateRoute({ children }) {
   const { usuario } = useAuth()
@@ -24,10 +25,11 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/login"    element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/cadastro" element={<PublicRoute><Cadastro /></PublicRoute>} />
-          <Route path="/perfil" element={<PrivateRoute><Layout><Perfil /></Layout></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/perfil"   element={<PrivateRoute><Layout><Perfil /></Layout></PrivateRoute>} />
+          <Route path="/nutricao" element={<PrivateRoute><Layout><Nutricao /></Layout></PrivateRoute>} />
+          <Route path="*"         element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

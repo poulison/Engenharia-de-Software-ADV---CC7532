@@ -107,3 +107,15 @@ input:focus, select:focus { border-color: var(--green); }
 @media (max-width: 640px) {
   .form-grid { grid-template-columns: 1fr; }
 }
+
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--gray-800);
+  margin-bottom: 24px;
+}

@@ -22,6 +22,9 @@ export default function Navbar() {
           <Link to="/perfil" style={{ ...styles.link, ...(pathname === '/perfil' ? styles.active : {}) }}>
             👤 Perfil
           </Link>
+          <Link to="/nutricao" style={{ ...styles.link, ...(pathname === '/nutricao' ? styles.active : {}) }}>
+            🥗 Nutrição
+          </Link>
           <button onClick={handleLogout} style={styles.logoutBtn}>Sair</button>
         </div>
       )}
