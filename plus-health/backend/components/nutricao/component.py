@@ -18,6 +18,7 @@ Lógica central:
 
 from .interfaces import NutricaoService
 from .schemas import (
+    AlimentoOut,
     RecomendacaoNutricional,
     MacrosRecomendados,
     RefeicaoSugerida,
@@ -33,6 +34,7 @@ from components.usuario.interfaces import UsuarioService
 # Mapeamento de objetivos aceitos → chave interna
 _OBJETIVOS = {
     "emagrecer": "emagrecer",
+    "perda de peso": "emagrecer",
     "perder peso": "emagrecer",
     "emagrecimento": "emagrecer",
     "ganhar massa": "massa",
@@ -41,6 +43,11 @@ _OBJETIVOS = {
     "manter": "manter",
     "manutenção": "manter",
     "manutencao": "manter",
+    "condicionamento fisico": "manter",
+    "condicionamento físico": "manter",
+    "bem-estar geral": "manter",
+    "saude preventiva": "manter",
+    "saúde preventiva": "manter",
 }
 
 # Fator de atividade leve (sedentário/leve) — usado como base
@@ -122,6 +129,75 @@ _DICAS: dict[str, list[str]] = {
     ],
 }
 
+_ALIMENTOS = [
+    {
+        "id": 1,
+        "nome": "Peito de frango grelhado",
+        "categoria": "Proteina",
+        "porcao": "100 g",
+        "calorias": 165,
+        "proteina_g": 31.0,
+        "carboidrato_g": 0.0,
+        "gordura_g": 3.6,
+        "fibras_g": 0.0,
+    },
+    {
+        "id": 2,
+        "nome": "Arroz integral cozido",
+        "categoria": "Carboidrato",
+        "porcao": "100 g",
+        "calorias": 124,
+        "proteina_g": 2.6,
+        "carboidrato_g": 25.8,
+        "gordura_g": 1.0,
+        "fibras_g": 2.7,
+    },
+    {
+        "id": 3,
+        "nome": "Ovo inteiro",
+        "categoria": "Proteina",
+        "porcao": "1 unidade",
+        "calorias": 72,
+        "proteina_g": 6.3,
+        "carboidrato_g": 0.4,
+        "gordura_g": 4.8,
+        "fibras_g": 0.0,
+    },
+    {
+        "id": 4,
+        "nome": "Banana prata",
+        "categoria": "Fruta",
+        "porcao": "1 unidade",
+        "calorias": 86,
+        "proteina_g": 1.1,
+        "carboidrato_g": 22.0,
+        "gordura_g": 0.1,
+        "fibras_g": 2.0,
+    },
+    {
+        "id": 5,
+        "nome": "Aveia em flocos",
+        "categoria": "Carboidrato",
+        "porcao": "40 g",
+        "calorias": 156,
+        "proteina_g": 5.4,
+        "carboidrato_g": 26.5,
+        "gordura_g": 2.8,
+        "fibras_g": 4.2,
+    },
+    {
+        "id": 6,
+        "nome": "Abacate",
+        "categoria": "Gordura boa",
+        "porcao": "100 g",
+        "calorias": 160,
+        "proteina_g": 2.0,
+        "carboidrato_g": 8.5,
+        "gordura_g": 14.7,
+        "fibras_g": 6.7,
+    },
+]
+
 
 # ---------------------------------------------------------------------------
 # Componente
@@ -185,6 +261,21 @@ class NutricaoComponent(NutricaoService):
             refeicoes_sugeridas=refeicoes,
             dicas=dicas,
         )
+
+    def buscar_alimentos(self, nome: str | None = None) -> list[AlimentoOut]:
+        alimentos = _ALIMENTOS
+        if nome:
+            termo = nome.strip().lower()
+            alimentos = [
+                alimento for alimento in alimentos
+                if termo in alimento["nome"].lower()
+                or termo in alimento["categoria"].lower()
+            ]
+        return [AlimentoOut(**alimento) for alimento in alimentos]
+
+    def detalhar_alimento(self, alimento_id: int) -> AlimentoOut | None:
+        alimento = next((a for a in _ALIMENTOS if a["id"] == alimento_id), None)
+        return AlimentoOut(**alimento) if alimento else None
 
     # ------------------------------------------------------------------
     # Helpers privados

@@ -68,6 +68,7 @@ export default function Perfil() {
 
           <div style={styles.infoGrid}>
             <InfoItem label="Idade" value={`${usuario.idade} anos`} />
+            <InfoItem label="Sexo" value={usuario.sexo || '—'} />
             <InfoItem label="Objetivo" value={usuario.objetivo || '—'} />
             <InfoItem label="Peso" value={`${usuario.peso} kg`} />
             <InfoItem label="Altura" value={`${usuario.altura} m`} />

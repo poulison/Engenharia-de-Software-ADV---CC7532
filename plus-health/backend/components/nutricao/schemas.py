@@ -14,6 +14,18 @@ class RefeicaoSugerida(BaseModel):
     kcal_estimado: int
 
 
+class AlimentoOut(BaseModel):
+    id: int
+    nome: str
+    categoria: str
+    porcao: str
+    calorias: int
+    proteina_g: float
+    carboidrato_g: float
+    gordura_g: float
+    fibras_g: float
+
+
 class RecomendacaoNutricional(BaseModel):
     usuario_id: int
     nome: str

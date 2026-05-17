@@ -9,7 +9,7 @@ export default function Cadastro() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    nome: '', email: '', senha: '', idade: '', peso: '', altura: '', objetivo: ''
+    nome: '', email: '', senha: '', idade: '', sexo: '', peso: '', altura: '', objetivo: ''
   })
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
@@ -83,9 +83,20 @@ export default function Cadastro() {
 
           <div className="form-grid">
             <div className="form-group">
+              <label>Sexo</label>
+              <select name="sexo" value={form.sexo} onChange={handleChange}>
+                <option value="">Selecione...</option>
+                <option value="feminino">Feminino</option>
+                <option value="masculino">Masculino</option>
+              </select>
+            </div>
+            <div className="form-group">
               <label>Peso (kg)</label>
               <input name="peso" type="number" step="0.1" value={form.peso} onChange={handleChange} placeholder="65.0" required />
             </div>
+          </div>
+
+          <div className="form-grid">
             <div className="form-group">
               <label>Altura (m)</label>
               <input name="altura" type="number" step="0.01" value={form.altura} onChange={handleChange} placeholder="1.68" required />

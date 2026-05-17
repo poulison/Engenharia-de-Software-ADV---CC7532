@@ -23,10 +23,11 @@ class CalculosComponent(CalculosService):
         u = self._usuario_service.buscar(usuario_id)
         if not u:
             raise ValueError(f"Usuário {usuario_id} não encontrado.")
-        tmb = round(10 * u.peso + 6.25 * (u.altura * 100) - 5 * u.idade, 2)
+        ajuste_sexo = _ajuste_tmb_por_sexo(u.sexo)
+        tmb = round(10 * u.peso + 6.25 * (u.altura * 100) - 5 * u.idade + ajuste_sexo, 2)
         return ResultadoTMB(
             usuario_id=u.id, nome=u.nome, tmb_kcal=tmb,
-            descricao=f"Você precisa de aproximadamente {tmb} kcal/dia em repouso."
+            descricao=f"Você precisa de aproximadamente {tmb} kcal/dia em repouso pela fórmula Mifflin-St Jeor."
         )
 
     @staticmethod
@@ -37,3 +38,12 @@ class CalculosComponent(CalculosService):
         if imc < 35.0: return "Obesidade grau I"
         if imc < 40.0: return "Obesidade grau II"
         return "Obesidade grau III"
+
+
+def _ajuste_tmb_por_sexo(sexo: str | None) -> int:
+    valor = (sexo or "").strip().lower()
+    if valor in {"masculino", "homem", "m"}:
+        return 5
+    if valor in {"feminino", "mulher", "f"}:
+        return -161
+    return 0

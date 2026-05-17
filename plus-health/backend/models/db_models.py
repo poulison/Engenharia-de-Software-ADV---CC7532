@@ -10,6 +10,7 @@ class UsuarioDB(Base):
     email    = Column(String(200), unique=True, nullable=False, index=True)
     senha    = Column(String(200), nullable=False)
     idade    = Column(Integer, nullable=False)
+    sexo     = Column(String(20), nullable=True)
     peso     = Column(Float, nullable=False)
     altura   = Column(Float, nullable=False)
     objetivo = Column(String(200), nullable=True)

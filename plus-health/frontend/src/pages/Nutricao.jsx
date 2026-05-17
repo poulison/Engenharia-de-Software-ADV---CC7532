@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { recomendarNutricao } from '../services/api'
+import { buscarAlimento, recomendarNutricao } from '../services/api'
 
 // ── Sub-componentes ─────────────────────────────────────────────────────────
 
@@ -93,6 +93,8 @@ function objetivoBadge(objetivo) {
 export default function Nutricao() {
   const { usuario } = useAuth()
   const [dados, setDados] = useState(null)
+  const [alimentos, setAlimentos] = useState([])
+  const [termoAlimento, setTermoAlimento] = useState('')
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -104,6 +106,18 @@ export default function Nutricao() {
       .catch(() => setErro('Não foi possível carregar a recomendação nutricional.'))
       .finally(() => setLoading(false))
   }, [usuario])
+
+  useEffect(() => {
+    buscarAlimento('')
+      .then(r => setAlimentos(r.data))
+      .catch(() => {})
+  }, [])
+
+  async function pesquisarAlimentos(e) {
+    e.preventDefault()
+    const { data } = await buscarAlimento(termoAlimento)
+    setAlimentos(data)
+  }
 
   if (!usuario) return null
 
@@ -160,6 +174,34 @@ export default function Nutricao() {
       <div className="card" style={{ marginBottom: 24 }}>
         <SectionTitle emoji="💡" title="Como foi calculada sua meta calórica" />
         <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>{dados.descricao_ajuste}</p>
+      </div>
+
+      <div className="card" style={{ marginBottom: 24 }}>
+        <SectionTitle emoji="🔎" title="Informações nutricionais" />
+        <form onSubmit={pesquisarAlimentos} style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10, marginBottom: 14 }}>
+          <input
+            value={termoAlimento}
+            onChange={e => setTermoAlimento(e.target.value)}
+            placeholder="Buscar alimento ou categoria"
+          />
+          <button type="submit" className="btn btn-primary">Buscar</button>
+        </form>
+        <div style={styles.foodGrid}>
+          {alimentos.map(alimento => (
+            <div key={alimento.id} style={styles.foodItem}>
+              <div>
+                <p style={{ fontWeight: 800, color: '#1f2937' }}>{alimento.nome}</p>
+                <p style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{alimento.categoria} · {alimento.porcao}</p>
+              </div>
+              <div style={styles.foodMacros}>
+                <strong>{alimento.calorias} kcal</strong>
+                <span>P {alimento.proteina_g}g</span>
+                <span>C {alimento.carboidrato_g}g</span>
+                <span>G {alimento.gordura_g}g</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div style={styles.grid2}>
@@ -235,6 +277,25 @@ const styles = {
   page: { maxWidth: 960, margin: '0 auto', padding: '32px 24px' },
   grid4: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'start' },
+  foodGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 },
+  foodItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 14,
+    padding: '12px 14px',
+    borderRadius: 10,
+    background: '#f9fafb',
+    border: '1px solid #f3f4f6',
+  },
+  foodMacros: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: 2,
+    textAlign: 'right',
+    fontSize: 12,
+    color: '#6b7280',
+    minWidth: 86,
+  },
   loadingWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80 },
   spinner: {
     width: 44, height: 44, borderRadius: '50%',

@@ -5,6 +5,8 @@ import Login    from './pages/Login'
 import Cadastro from './pages/Cadastro'
 import Perfil   from './pages/Perfil'
 import Nutricao from './pages/Nutricao'
+import Exercicios from './pages/Exercicios'
+import Relatorio from './pages/Relatorio'
 
 function PrivateRoute({ children }) {
   const { usuario } = useAuth()
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/cadastro" element={<PublicRoute><Cadastro /></PublicRoute>} />
           <Route path="/perfil"   element={<PrivateRoute><Layout><Perfil /></Layout></PrivateRoute>} />
           <Route path="/nutricao" element={<PrivateRoute><Layout><Nutricao /></Layout></PrivateRoute>} />
+          <Route path="/exercicios" element={<PrivateRoute><Layout><Exercicios /></Layout></PrivateRoute>} />
+          <Route path="/relatorio" element={<PrivateRoute><Layout><Relatorio /></Layout></PrivateRoute>} />
           <Route path="*"         element={<Navigate to="/login" replace />} />
         </Routes>
       </BrowserRouter>

@@ -7,6 +7,7 @@ class UsuarioCriar(BaseModel):
     email:    str
     senha:    str   = Field(..., min_length=4)
     idade:    int   = Field(..., gt=0, lt=120)
+    sexo:     Optional[str] = None
     peso:     float = Field(..., gt=0)
     altura:   float = Field(..., gt=0)
     objetivo: Optional[str] = None
@@ -27,6 +28,7 @@ class UsuarioOut(BaseModel):
     nome:     str
     email:    str
     idade:    int
+    sexo:      Optional[str] = None
     peso:     float
     altura:   float
     objetivo: Optional[str] = None

@@ -25,6 +25,12 @@ export default function Navbar() {
           <Link to="/nutricao" style={{ ...styles.link, ...(pathname === '/nutricao' ? styles.active : {}) }}>
             🥗 Nutrição
           </Link>
+          <Link to="/exercicios" style={{ ...styles.link, ...(pathname === '/exercicios' ? styles.active : {}) }}>
+            🏃 Exercícios
+          </Link>
+          <Link to="/relatorio" style={{ ...styles.link, ...(pathname === '/relatorio' ? styles.active : {}) }}>
+            Relatório
+          </Link>
           <button onClick={handleLogout} style={styles.logoutBtn}>Sair</button>
         </div>
       )}

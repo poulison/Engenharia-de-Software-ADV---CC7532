@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from components.nutricao.interfaces import NutricaoService
-from components.nutricao.schemas import RecomendacaoNutricional
+from components.nutricao.schemas import AlimentoOut, RecomendacaoNutricional
 from dependencies import get_nutricao_service
 
 router = APIRouter(prefix="/nutricao", tags=["Nutrição"])
@@ -23,3 +23,22 @@ def recomendar(
         return svc.recomendar(usuario_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/buscar", response_model=list[AlimentoOut])
+def buscar_alimentos(
+    nome: str | None = None,
+    svc: NutricaoService = Depends(get_nutricao_service),
+):
+    return svc.buscar_alimentos(nome)
+
+
+@router.get("/{alimento_id}", response_model=AlimentoOut)
+def detalhar_alimento(
+    alimento_id: int,
+    svc: NutricaoService = Depends(get_nutricao_service),
+):
+    alimento = svc.detalhar_alimento(alimento_id)
+    if not alimento:
+        raise HTTPException(status_code=404, detail="Alimento nao encontrado.")
+    return alimento

@@ -30,12 +30,24 @@ Responsável por cadastrar, autenticar e gerenciar os dados dos usuários. Persi
 Responsável pelos cálculos de saúde corporal. Para funcionar, precisa dos dados físicos do usuário (peso, altura, idade), que são fornecidos pelo UsuarioComponent via interface. Operações que oferece:
 
 - `calcular_imc()` — calcula o IMC (peso ÷ altura²) e retorna a classificação da OMS
-- `calcular_tmb()` — calcula a Taxa Metabólica Basal pela fórmula Mifflin-St Jeor
+- `calcular_tmb()` — calcula a Taxa Metabólica Basal pela fórmula Mifflin-St Jeor considerando sexo quando informado
 
 ### NutricaoComponent
 Responsável por gerar recomendações nutricionais personalizadas combinando os indicadores corporais com o objetivo do usuário. Para funcionar, depende dos resultados de IMC e TMB (fornecidos pelo CalculosComponent) e do objetivo cadastrado pelo usuário (fornecido pelo UsuarioComponent). Operações que oferece:
 
 - `recomendar()` — retorna meta calórica diária, macros (proteína, carboidrato e gordura em gramas), sugestão de refeições e dicas personalizadas por objetivo
+- `buscar_alimentos()` — consulta informações nutricionais por nome ou categoria
+- `detalhar_alimento()` — retorna calorias e macronutrientes de um alimento específico
+
+### ExerciciosComponent
+Responsável pelo catálogo de exercícios físicos. Opera de forma independente, expondo uma lista curada de movimentos com grupo muscular, nível, equipamento, instruções, dicas e estimativa calórica. Operações que oferece:
+
+- `listar()` — retorna exercícios com filtros opcionais por grupo muscular, nível e busca textual
+- `buscar()` — retorna os detalhes de um exercício pelo ID
+- `recomendar()` — sugere exercícios de acordo com o objetivo do usuário
+
+### RelatorioComponent
+Responsável por consolidar o fluxo principal em uma visão única. Combina perfil, IMC, TMB, recomendação nutricional e exercícios recomendados.
 
 A lógica de cálculo varia de acordo com o objetivo informado no cadastro:
 
@@ -72,6 +84,15 @@ class CalculosService(ABC):
 ```python
 class NutricaoService(ABC):
     def recomendar(usuario_id: int) -> RecomendacaoNutricional
+    def buscar_alimentos(nome: str | None = None) -> list[AlimentoOut]
+    def detalhar_alimento(alimento_id: int) -> AlimentoOut | None
+```
+
+**\<\<Interface\>\> ExerciciosService**
+```python
+class ExerciciosService(ABC):
+    def listar(grupo=None, nivel=None, busca=None) -> list[ExercicioOut]
+    def buscar(exercicio_id: int) -> ExercicioOut | None
 ```
 
 ---
@@ -83,6 +104,7 @@ Interface requerida é uma dependência que um componente precisa de outro para 
 - **UsuarioComponent** — não requer nenhuma interface externa, é independente
 - **CalculosComponent** — requer `UsuarioService` para buscar o peso, altura e idade do usuário antes de calcular
 - **NutricaoComponent** — requer `CalculosService` (para IMC e TMB) e `UsuarioService` (para o objetivo do usuário)
+- **ExerciciosComponent** — não requer nenhuma interface externa, é independente
 
 As dependências são declaradas apenas pelo tipo da interface no construtor:
 
@@ -204,6 +226,23 @@ Exemplo de resposta de IMC:
 | Método | Endpoint | Descrição |
 |---|---|---|
 | `GET` | `/nutricao/recomendar/{usuario_id}` | Recomendação nutricional personalizada completa |
+| `GET` | `/nutricao/buscar?nome=frango` | Busca alimentos por nome ou categoria |
+| `GET` | `/nutricao/{alimento_id}` | Detalha um alimento específico |
+
+### Exercícios — `/exercicios`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/exercicios/` | Lista todos os exercícios |
+| `GET` | `/exercicios/?grupo=Cardio&nivel=Iniciante` | Lista exercícios filtrados |
+| `GET` | `/exercicios/recomendar/{usuario_id}` | Recomenda exercícios pelo objetivo do usuário |
+| `GET` | `/exercicios/{exercicio_id}` | Detalha um exercício específico |
+
+### Relatório — `/relatorio`
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/relatorio/{usuario_id}` | Retorna perfil, IMC, TMB, nutrição e exercícios recomendados |
 
 Exemplo de resposta:
 ```json
@@ -313,7 +352,26 @@ curl http://localhost:8000/calculos/tmb/1
 curl http://localhost:8000/nutricao/recomendar/1
 ```
 
-**6. Atualizar peso e verificar se os cálculos se atualizam**
+**6. Consultar informações nutricionais**
+```bash
+curl "http://localhost:8000/nutricao/buscar?nome=frango"
+curl http://localhost:8000/nutricao/1
+```
+
+**7. Consultar catálogo de exercícios**
+```bash
+curl http://localhost:8000/exercicios/
+curl "http://localhost:8000/exercicios/?grupo=Cardio"
+curl http://localhost:8000/exercicios/recomendar/1
+curl http://localhost:8000/exercicios/1
+```
+
+**8. Gerar relatório consolidado**
+```bash
+curl http://localhost:8000/relatorio/1
+```
+
+**9. Atualizar peso e verificar se os cálculos se atualizam**
 ```bash
 curl -X PATCH http://localhost:8000/usuarios/1/fisico \
   -H "Content-Type: application/json" \
@@ -334,6 +392,13 @@ curl http://localhost:8000/calculos/tmb/1
 curl http://localhost:8000/nutricao/recomendar/1
 # → {"tmb_kcal": 1560.0, "kcal_alvo": 2143.0, ...}
 #    kcal_alvo = tmb_kcal × 1.375 + ajuste_por_objetivo
+```
+
+### Testes automatizados
+
+```bash
+cd plus-health/backend
+python -m pytest tests
 ```
 
 ### Testando diferentes objetivos
